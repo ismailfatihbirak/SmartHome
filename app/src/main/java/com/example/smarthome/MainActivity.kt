@@ -12,23 +12,33 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,17 +56,23 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smarthome.ui.theme.SmartHomeTheme
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 class MainActivity : ComponentActivity() {
@@ -72,6 +88,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 @Composable
 fun LampWithEnhancedGlowEffect(modifier: Modifier) {
     var expanded by remember { mutableStateOf(false) }
@@ -82,15 +99,14 @@ fun LampWithEnhancedGlowEffect(modifier: Modifier) {
         animationSpec = tween(durationMillis = 1000)
     )
     var showaxsd by remember { mutableStateOf(true) }
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = svgPainter,
             contentDescription = "",
             modifier = Modifier
                 .fillMaxSize()
                 .blur(blurAmount),
-            contentScale = ContentScale.FillBounds
-        )
+            contentScale = ContentScale.FillBounds)
         FloatingActionButton(
             onClick = {
                 expanded = !expanded
@@ -120,7 +136,7 @@ fun LampWithEnhancedGlowEffect(modifier: Modifier) {
         AnimatedVisibility(
             visible = showaxsd,
             enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
-            exit = fadeOut(animationSpec = tween(durationMillis = 1000))
+            exit = fadeOut(animationSpec = tween(durationMillis = 1000)),
         ) {
             SliderAndLayer()
         }
@@ -129,11 +145,11 @@ fun LampWithEnhancedGlowEffect(modifier: Modifier) {
 @Composable
 fun MenuItems() {
     val itemCount = 5
-    val radius = 200.dp
-    val centerOffset = 30.dp // Distance from the center of the FAB to the right side
-    val startAngle = 10.0 // Angle between the first menu item and the vertical line from the FAB
-    val endAngle = 10.0 // Angle between the last menu item and the vertical line from the FAB
-    val itemAngle = (180 - startAngle - endAngle) / (itemCount - 1) // Angle between each menu item
+    val radius = 90.dp
+    val centerOffset = 0.dp
+    val startAngle = 5.0
+    val endAngle = 5.0
+    val itemAngle = (180 - startAngle - endAngle) / (itemCount - 1)
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -141,101 +157,44 @@ fun MenuItems() {
         contentAlignment = Alignment.CenterEnd
     ) {
         repeat(itemCount) { index ->
-            val angle = Math.toRadians(startAngle + index * itemAngle) // Calculate the angle for each menu item
+            val angle = Math.toRadians(90 - startAngle - index * itemAngle)
             val xOffset = (radius.value * cos(angle)).toDp()
-            val yOffset = (radius.value * sin(angle)).toDp()
+            val yOffset = ((radius.value * sin(angle))* 1.15f).toDp()
             MenuItem(
                 text = when (index) {
-                    0 -> "Guest Mode"
-                    1 -> "Reading"
+                    0 -> "Party Hours"
+                    1 -> "Date Night"
                     2 -> "Movie Time"
-                    3 -> "Date Night"
-                    4 -> "Party Hours"
+                    3 -> "Guest Mode"
+                    4 -> "Reading"
                     else -> "Item $index"
                 },
                 modifier = Modifier.offset(-xOffset, yOffset),
-                size = 104.dp,
-                backgroundColor = colorResource(id = R.color.blackx).copy(alpha = 0.7f),
-                textColor = colorResource(id = R.color.yellowx)
+                size = when (index) {
+                    0 -> 154.dp
+                    1 -> 128.dp
+                    2 -> 150.dp
+                    3 -> 132.dp
+                    4 -> 104.dp
+                    else -> 104.dp
+                },
+                backgroundColor = if(index == 3){
+                    colorResource(id = R.color.yellowy).copy(alpha = 0.7f)
+                }else{
+                    colorResource(id = R.color.blackx).copy(alpha = 0.7f)
+                },
+                textColor = if(index == 3){
+                    colorResource(id = R.color.blackx).copy(alpha = 0.7f)
+                }else{
+                    colorResource(id = R.color.yellowx).copy(alpha = 0.7f)
+                }
             )
         }
     }
 }
-@Composable
-fun MenuItem(
-    text: String,
-    modifier: Modifier = Modifier,
-    size: Dp,
-    backgroundColor: Color,
-    textColor: Color
-) {
-    Box(
-        modifier = modifier
-            .size(size)
-            .background(backgroundColor, shape = CircleShape)
-            .border(1.dp, Color.Black, shape = CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = text, color = textColor)
-    }
-}
+
 @Composable
 private fun Double.toDp(): Dp = (this * LocalDensity.current.density).dp
-//@Composable
-//fun LampWithEnhancedGlowEffect(modifier: Modifier) {
-//    var expanded by remember { mutableStateOf(false) }
-//    val svgPainter = painterResource(id = R.drawable.image)
-//    var blurAmountFab by remember { mutableStateOf(0.dp) }
-//    val blurAmount by animateDpAsState(
-//        targetValue = if (expanded) 10.dp else 0.dp,
-//        animationSpec = tween(durationMillis = 1000)
-//    )
-//    var showaxsd by remember { mutableStateOf(true) }
-//
-//    Box(modifier = Modifier.fillMaxSize()) {
-//        Image(
-//            painter = svgPainter,
-//            contentDescription = "",
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .blur(blurAmount),
-//            contentScale = ContentScale.FillBounds)
-//        FloatingActionButton(
-//            onClick = {
-//                expanded = !expanded
-//                showaxsd = !showaxsd
-//                blurAmountFab = if (expanded) 10.dp else 0.dp
-//            },
-//            modifier = Modifier
-//                .align(Alignment.CenterEnd)
-//                .padding(end = 30.dp)
-//                .size(75.dp),
-//            shape = CircleShape,
-//            containerColor = colorResource(id = R.color.yellowy)
-//        ) {
-//            Icon(
-//                imageVector = Icons.Default.Add,
-//                contentDescription = "",
-//                modifier = Modifier.size(40.dp)
-//            )
-//        }
-//        AnimatedVisibility(
-//            visible = expanded,
-//            enter = fadeIn(animationSpec = tween(durationMillis = 1500)),
-//            exit = fadeOut(animationSpec = tween(durationMillis = 1500))
-//        ) {
-//            MenuItems()
-//        }
-//        AnimatedVisibility(
-//            visible = showaxsd,
-//            enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
-//            exit = fadeOut(animationSpec = tween(durationMillis = 1000))
-//        ) {
-//            SliderAndLayer()
-//        }
-//    }
-//
-//}
 
 @Composable
 fun GlowLayer(modifier: Modifier = Modifier, brightness: Float, color: Color, intensity: Float) {
@@ -252,82 +211,23 @@ fun GlowLayer(modifier: Modifier = Modifier, brightness: Float, color: Color, in
         )
     })
 }
-
-//@Composable
-//fun MenuItems() {
-//    Box(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(50.dp),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-//            MenuItem(
-//                "Reading",
-//                Modifier.offset(150.dp, -60.dp),
-//                size = 104.dp,
-//                backgroundColor = colorResource(
-//                    id = R.color.blackx
-//                ).copy(alpha = 0.7f),
-//                textColor = colorResource(id = R.color.yellowx)
-//            )
-//            MenuItem(
-//                "Guest Mode",
-//                Modifier.offset(-20.dp, -54.dp),
-//                size = 132.dp,
-//                backgroundColor = colorResource(
-//                    id = R.color.yellowy
-//                ).copy(alpha = 0.7f),
-//                textColor = colorResource(id = R.color.blackx)
-//            )
-//            MenuItem(
-//                "Movie Time",
-//                Modifier.offset(-112.dp, 0.dp),
-//                size = 166.dp,
-//                backgroundColor = colorResource(
-//                    id = R.color.blackx
-//                ).copy(alpha = 0.7f),
-//                textColor = colorResource(id = R.color.yellowx)
-//            )
-//            MenuItem(
-//                "Date Night",
-//                Modifier.offset(-20.dp, 54.dp),
-//                size = 128.dp,
-//                backgroundColor = colorResource(
-//                    id = R.color.blackx
-//                ).copy(alpha = 0.7f),
-//                textColor = colorResource(id = R.color.yellowx)
-//            )
-//            MenuItem(
-//                "Party Hours",
-//                Modifier.offset(125.dp, 77.dp),
-//                size = 154.dp,
-//                backgroundColor = colorResource(
-//                    id = R.color.blackx
-//                ).copy(alpha = 0.7f),
-//                textColor = colorResource(id = R.color.yellowx)
-//            )
-//        }
-//    }
-//}
-
-//@Composable
-//fun MenuItem(
-//    text: String,
-//    modifier: Modifier,
-//    backgroundColor: Color = Color.Black.copy(alpha = 0.5f),
-//    size: Dp,
-//    textColor: Color
-//) {
-//    Box(
-//        modifier = modifier
-//            .size(size)
-//            .background(backgroundColor, CircleShape),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        Text(text, color = textColor, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-//    }
-//}
+@Composable
+fun MenuItem(
+    text: String,
+    modifier: Modifier,
+    backgroundColor: Color = Color.Black.copy(alpha = 0.5f),
+    size: Dp,
+    textColor: Color
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .background(backgroundColor, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text, color = textColor, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+    }
+}
 
 
 @Composable
@@ -349,25 +249,79 @@ fun SliderAndLayer(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .size(75.dp)
                     .align(alignment = Alignment.TopEnd)
-                    .offset(x = -25.dp, y = 1.dp),
+                    .offset(x = -18.dp, y = 193.dp),
                 brightness = brightness,
                 color = colorResource(id = R.color.yellowx),
-                intensity = 4f,
-
+                intensity = 3f,
                 )
         }
         Spacer(modifier = Modifier.height(32.dp))
-        Slider(
-            value = brightness,
-            onValueChange = { brightness = it },
-            valueRange = 0f..1f,
-            colors = SliderDefaults.colors(
-                thumbColor = Color.Black,
-                activeTrackColor = Color.Yellow
-            )
-        )
+        val percentage = (brightness * 100).roundToInt()
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(20.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .width(64.dp)
+                        .height(400.dp)
+                        .clip(RoundedCornerShape(30.dp))
+                        .background(Color.Gray)
+
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(64.dp)
+                            .height((400 * brightness).dp)
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    listOf(
+                                        colorResource(id = R.color.yellowy).copy(
+                                            alpha = 0.5f
+                                        ), colorResource(id = R.color.yellowy).copy(alpha = 1f)
+                                    )
+                                )
+                            )
+                            .clip(RoundedCornerShape(30.dp))
+                            .align(Alignment.BottomCenter)
+                            .pointerInput(Unit) {
+                                detectVerticalDragGestures { change, dragAmount ->
+                                    val newPosition = brightness - dragAmount / 1000
+                                    brightness = newPosition.coerceIn(0f, 1f)
+                                }
+                            }
+                    )
+                    Image(painter = painterResource(id = R.drawable.group_32), contentDescription = "",
+                        modifier = Modifier
+                            .size(64.dp)
+                            .align(Alignment.BottomCenter)
+                            .offset(y = -(340 * brightness).dp))
+
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .background(color = colorResource(id = R.color.blackx).copy(alpha = 0.7f), shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "$percentage%",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontSize = 28.sp
+                    )
+                }
+            }
+        }
     }
 }
+
+
 
 
 
